@@ -19,8 +19,8 @@ let filter_procs = data => {
   num_vscode = 0;
   return {
     data: data.list.map(proc => {
-      // let flagged_string = ".vscode-server";
-      let flagged_string = "node";
+      let flagged_string = ".vscode-server";
+      // let flagged_string = "node";
       if (proc.command.includes(flagged_string)) {
         num_vscode += 0.5; // Technically each instance will have 2 procs going?
       }

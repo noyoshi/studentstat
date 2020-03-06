@@ -67,7 +67,7 @@
         // Create new card
         body = document.getElementById("row");
         body.innerHTML +=
-          `<div class="col" style="margin-bottom: 5px;"><div class="card"><div class="card-body" id="${host}_card"><h4 style="text-align: center; font-family: monospace">${host}</h4><div><span><h5 id="${host}_status" style="display: inline-block">Status: Alive</h5></span><span style="display: inline-block; float: right;">VSCode Instances: <span id="${host}_code"></span></span></div></div>` +
+          `<div class="col" style="margin-bottom: 5px;"><div class="card"><div class="card-body" id="${host}_card"><h4 style="text-align: center; font-family: monospace;"><u>${host}</u></h4><div><span><b id="${host}_status" style="display: inline-block">Status</b> Alive</span><span style="display: inline-block; float: right;"><b>VSCode Instances</b> <span id="${host}_code"></span></span></div></div>` +
           "</div></div>";
         num_items = window.localStorage.getItem("n");
         num_items++;
@@ -108,7 +108,11 @@
 
     function set_code(host, n) {
       num_code = document.getElementById(`${host}_code`);
-      num_code.text = n;
+      if (n != undefined) {
+        num_code.innerHTML = `${n}`;
+      } else {
+        num_code.innerHTML = "upgrade needed";
+      }
     }
 
     function get_data(host, port) {
@@ -123,6 +127,7 @@
           .then(resp => resp.json())
           .then(r => {
             console.log(r);
+            console.log("NUM VSCODE", r.vscode);
             mem = r.mem;
             make_card(host, port);
             set_memory(mem, host, port);
