@@ -1,0 +1,157 @@
+<html>
+  <!-- <link rel="stylesheet" type="text/css" href="tabs.css" />
+  <script src="tabs.js"></script> -->
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+    crossorigin="anonymous"
+  />
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+    integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"
+  ></script>
+  <script>
+    // Clear local storage on page load
+    localStorage.clear();
+    localStorage.setItem("n", 0);
+
+    student_machines = ["00", "01", "02", "05", "05", "10", "11", "12", "13"];
+
+    student_machines.forEach(code => {
+      port = 9090;
+      host = `student${code}.cse.nd.edu`;
+      get_data(host, port);
+    });
+
+    function format_bar(data, label, host) {
+      return `${label} <div class="progress"><div class="progress-bar" id='${host}_${label}_bar' role="progressbar" aria-valuenow='${data}' aria-valuemin="0" aria-valuemax="100" style="width:${data}%; "background-color: #57A0F5""></div>`;
+    }
+
+    function make_bar(percentage, label, host) {
+      current_bar = document.getElementById(`${host}_${label}_bar`);
+      if (current_bar) {
+        console.log("found bar");
+        current_bar.aria_valuenow = percentage;
+        current_bar.style = `width:${percentage}%`;
+        console.log(percentage);
+        if (percentage > 70) {
+          current_bar.style = `width:${percentage}%; background-color: #E43A13;`;
+        } else if (percentage > 50) {
+          current_bar.style = `width:${percentage}%; background-color: #F5AD57;`;
+        } else {
+          current_bar.style = `width:${percentage}%; background-color: #007bff;`;
+        }
+      } else {
+        card = document.getElementById(`${host}_card`);
+        card.innerHTML += format_bar(percentage, label, host);
+      }
+    }
+
+    function make_card(host, port) {
+      card = document.getElementById(`${host}_card`);
+      if (!card) {
+        // Create new card
+        body = document.getElementById("row");
+        // clicker = <button class="btn btn-outline-dark" style="float:right" onclick=get_data("${host}",${port})><i class="material-icons md-36">autorenew</i></button>
+        body.innerHTML +=
+          `<div class="col" style="margin-bottom: 5px;"><div class="card"> <div class="card-body" id="${host}_card"><h4 style="text-align: center; font-family: monospace">${host}</h4><h5 ${host}_status>Status: Alive</h5></div>` +
+          "</div></div>";
+        num_items = window.localStorage.getItem("n");
+        num_items++;
+
+        if (num_items % 2 == 0) {
+          body.innerHTML += `<div class="w-100"></div>`;
+        }
+
+        window.localStorage.setItem("n", num_items);
+        return;
+      }
+      console.log("card already exists");
+    }
+
+    function set_memory(mem, host, port) {
+      label = "Memory";
+
+      percentage =
+        (parseFloat(mem.active.replace("GB", ""), 10) /
+          parseFloat(mem.total.replace("GB", ""), 10)) *
+        100;
+      make_bar(percentage, label, host);
+      console.log("done making mem");
+    }
+
+    function set_cpu(cpu, host) {
+      label = "CPU";
+      percentage = parseInt(cpu.replace("%", ""), 10);
+      make_bar(percentage, label, host);
+    }
+
+    function set_error(host) {
+      status = document.getElementById(`${host}_status`);
+      if (status) {
+        status.text = "Down";
+      }
+    }
+
+    function get_data(host, port) {
+      uri = `${host}:${port}`;
+      var cached_time = localStorage.getItem(uri);
+      now = Date.now();
+      if (now - cached_time > 10) {
+        // Reset cache
+        localStorage.setItem(uri, now);
+        console.log("resetting cache");
+        fetch(`http://${uri}`)
+          .then(resp => resp.json())
+          .then(r => {
+            console.log(r);
+            mem = r.mem;
+            make_card(host, port);
+            set_memory(mem, host, port);
+            set_cpu(r.load.current, host);
+          })
+          .catch(err => set_error(host));
+        console.log(host);
+      }
+    }
+
+    function submit() {
+      host = document.getElementById("host").value;
+      port = document.getElementById("port").value;
+      get_data(host, port);
+    }
+
+    // Checks everything every 5 seconds
+    setInterval(() => {
+      Object.entries(window.localStorage).forEach(item => {
+        l = item[0].split(":");
+        host = l[0];
+        port = l[1];
+        console.log("auto refreshing: ", host, port);
+        get_data(host, port);
+      });
+    }, 5000);
+  </script>
+
+  <body>
+    <div class="container" style="margin-top: 10px">
+      <div class="row" id="row"></div>
+    </div>
+  </body>
+</html>
