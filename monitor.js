@@ -16,16 +16,26 @@ let parse_mem_data = data => {
 };
 
 let filter_procs = data => {
-  return data.list.map(proc => {
-    return {
-      user: proc.user,
-      mem: proc.pmem,
-      name: proc.name,
-      state: proc.state,
-      cmd: proc.command,
-      cpu: proc.pcpu
-    };
-  });
+  num_vscode = 0;
+  return {
+    data: data.list.map(proc => {
+      // let flagged_string = ".vscode-server";
+      let flagged_string = "node";
+      if (proc.command.includes(flagged_string)) {
+        num_vscode += 0.5; // Technically each instance will have 2 procs going?
+      }
+
+      return {
+        user: proc.user,
+        mem: proc.pmem,
+        name: proc.name,
+        state: proc.state,
+        cmd: proc.command,
+        cpu: proc.pcpu
+      };
+    }),
+    vscode: Math.round(num_vscode) // In case we are off
+  };
 };
 
 let filter_load = data => {
@@ -44,10 +54,12 @@ app.get("/", cors(), function(req, res) {
   si.mem().then(data => {
     si.processes().then(proc_data => {
       si.currentLoad().then(load_data => {
+        filered_procs = filter_procs(proc_data);
         res.send({
           mem: parse_mem_data(data),
-          num_procs: filter_procs(proc_data).length,
-          load: filter_load(load_data)
+          num_procs: filered_procs.data.length,
+          load: filter_load(load_data),
+          vscode: filered_procs.vscode
         });
       });
     });

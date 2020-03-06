@@ -1,6 +1,4 @@
 <html>
-  <!-- <link rel="stylesheet" type="text/css" href="tabs.css" />
-  <script src="tabs.js"></script> -->
   <link
     href="https://fonts.googleapis.com/icon?family=Material+Icons"
     rel="stylesheet"
@@ -68,9 +66,8 @@
       if (!card) {
         // Create new card
         body = document.getElementById("row");
-        // clicker = <button class="btn btn-outline-dark" style="float:right" onclick=get_data("${host}",${port})><i class="material-icons md-36">autorenew</i></button>
         body.innerHTML +=
-          `<div class="col" style="margin-bottom: 5px;"><div class="card"> <div class="card-body" id="${host}_card"><h4 style="text-align: center; font-family: monospace">${host}</h4><h5 ${host}_status>Status: Alive</h5></div>` +
+          `<div class="col" style="margin-bottom: 5px;"><div class="card"><div class="card-body" id="${host}_card"><h4 style="text-align: center; font-family: monospace">${host}</h4><div><span><h5 id="${host}_status" style="display: inline-block">Status: Alive</h5></span><span style="display: inline-block; float: right;">VSCode Instances: <span id="${host}_code"></span></span></div></div>` +
           "</div></div>";
         num_items = window.localStorage.getItem("n");
         num_items++;
@@ -109,6 +106,11 @@
       }
     }
 
+    function set_code(host, n) {
+      num_code = document.getElementById(`${host}_code`);
+      num_code.text = n;
+    }
+
     function get_data(host, port) {
       uri = `${host}:${port}`;
       var cached_time = localStorage.getItem(uri);
@@ -124,6 +126,7 @@
             mem = r.mem;
             make_card(host, port);
             set_memory(mem, host, port);
+            set_code(host, r.vscode);
             set_cpu(r.load.current, host);
           })
           .catch(err => set_error(host));
@@ -154,4 +157,11 @@
       <div class="row" id="row"></div>
     </div>
   </body>
+
+  <div style="text-align: center">
+    Made by Noah Yoshida ('20)
+    <a href="https://github.com/noyoshi/studentstat" target="_blank">
+      Contributions welcome!
+    </a>
+  </div>
 </html>
